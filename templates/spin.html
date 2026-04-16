@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align:center;">
+  <h2>🎡 Spin & Win Offers!</h2>
+  <p style="color:#777;margin:8px 0 20px;">Spin the wheel to get an exclusive discount on your order!</p>
+
+  {% if already_spun and offer %}
+  <div style="background:white;border-radius:12px;padding:28px;display:inline-block;box-shadow:0 2px 10px rgba(0,0,0,0.1);min-width:300px;">
+    <div style="font-size:3rem;">🎉</div>
+    <h2 style="color:#e65c00;margin:12px 0;">You won: {{ offer.label }}!</h2>
+    {% if offer.type == 'item' %}
+      <p style="color:#555;">A free <strong>{{ offer.item }}</strong> will be added to your order!</p>
+    {% elif offer.type == 'none' %}
+      <p style="color:#999;">Better luck next time! Browse our menu.</p>
+    {% else %}
+      <p style="color:#555;">Your discount is applied automatically at checkout.</p>
+    {% endif %}
+    <div style="margin-top:20px;">
+      <a href="/menu" class="btn">🍽️ Go to Menu</a>
+      <a href="/cart" class="btn" style="margin-left:8px;">🛒 View Cart</a>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Spin Wheel Canvas -->
+  <canvas id="wheel" width="360" height="360" style="border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,0.15);cursor:pointer;"></canvas>
+  <br><br>
+  <!-- Pointer -->
+  <div style="font-size:2rem;margin-top:-20px;">⬆️</div>
+  <br>
+  <button id="spin-btn" class="btn" style="padding:14px 40px;font-size:1.1rem;">🎡 SPIN!</button>
+  <p id="spin-status" style="color:#999;margin-top:12px;"></p>
+  {% endif %}
+</div>
+
+<script>
+  const offers = {{ offers | tojson }};
+  const canvas = document.getElementById('wheel');
+  if (!canvas) { /* already spun, no canvas */ }
+  else {
+    const ctx = canvas.getContext('2d');
+    const cx = 180, cy = 180, r = 170;
+    const arc = (2 * Math.PI) / offers.length;
+    let currentAngle = 0;
+    let spinning = false;
+
+    function drawWheel(angle) {
+      ctx.clearRect(0, 0, 360, 360);
+      offers.forEach((offer, i) => {
+        const start = angle + i * arc;
+        // Slice
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, start + arc);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? '#e65c00' : '#f7a800';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Label
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 13px Segoe UI';
+        ctx.fillText(offer.label, r - 12, 5);
+        ctx.restore();
+      });
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+      ctx.strokeStyle = '#e65c00';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    drawWheel(0);
+
+    document.getElementById('spin-btn').addEventListener('click', () => {
+      if (spinning) return;
+      spinning = true;
+      document.getElementById('spin-btn').disabled = true;
+      document.getElementById('spin-status').textContent = '🎡 Spinning...';
+
+      const totalSpins = (Math.floor(Math.random() * 5) + 5) * 2 * Math.PI;
+      const extraAngle = Math.random() * 2 * Math.PI;
+      const finalAngle = totalSpins + extraAngle;
+      const duration = 4000;
+      const start = performance.now();
+
+      function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out
+        const eased = 1 - Math.pow(1 - progress, 3);
+        currentAngle = eased * finalAngle;
+        drawWheel(currentAngle);
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // Determine winning slice
+          const normalized = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
+          const winIndex = Math.floor((normalized / (2 * Math.PI)) * offers.length) % offers.length;
+          // Send to server
+          fetch('/spin_result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ index: winIndex })
+          }).then(r => r.json()).then(offer => {
+            document.getElementById('spin-status').textContent = '🎉 You won: ' + offer.label + '!';
+            setTimeout(() => location.reload(), 1500);
+          });
+        }
+      }
+      requestAnimationFrame(animate);
+    });
+  }
+</script>
+{% endblock %}

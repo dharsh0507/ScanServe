@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📊 Analytics Dashboard</h2>
+
+<div style="display:flex;gap:16px;margin-bottom:24px;">
+  <div class="card" style="flex:1;display:block;">
+    <p class="section-title">Total Orders</p>
+    <h2 style="font-size:2rem;">{{ total_orders }}</h2>
+  </div>
+  <div class="card" style="flex:1;display:block;">
+    <p class="section-title">Total Revenue</p>
+    <h2 style="font-size:2rem;">₹{{ total_revenue }}</h2>
+  </div>
+</div>
+
+<div class="section-title">🔥 Most Ordered Items</div>
+<table>
+  <thead><tr><th>Item</th><th>Orders</th></tr></thead>
+  <tbody>
+    {% for name, count in item_counts %}
+    <tr>
+      <td>{{ name }}</td>
+      <td>
+        <div style="background:#fff3e0;border-radius:4px;overflow:hidden;">
+          <div style="background:#e65c00;height:20px;width:{{ [count * 20, 100] | min }}%;padding-left:8px;color:white;font-size:0.8rem;line-height:20px;">{{ count }}</div>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+    {% if not item_counts %}
+    <tr><td colspan="2" style="color:#999;">No orders yet</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+<div class="section-title" style="margin-top:24px;">⏰ Orders by Hour</div>
+<table>
+  <thead><tr><th>Hour</th><th>Orders</th></tr></thead>
+  <tbody>
+    {% for hour, count in hourly %}
+    <tr>
+      <td>{{ hour }}:00</td>
+      <td>{{ count }}</td>
+    </tr>
+    {% endfor %}
+    {% if not hourly %}
+    <tr><td colspan="2" style="color:#999;">No data yet</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align:center;">
+  <h2>😊 Mood-Based Food Recommendation</h2>
+  <p style="color:#777;margin:8px 0 24px;">Look at the camera — we'll detect your mood and suggest food!</p>
+
+  <div id="mood-select-section">
+
+    <!-- Camera always visible at top -->
+    <div style="margin-bottom:20px;">
+      <div style="position:relative;display:inline-block;">
+        <video id="video" width="320" height="240" autoplay muted playsinline
+          style="border-radius:14px;border:3px solid #e65c00;background:#222;display:block;"></video>
+        <canvas id="overlay" width="320" height="240"
+          style="position:absolute;top:0;left:0;border-radius:14px;pointer-events:none;"></canvas>
+      </div>
+      <br>
+      <p id="cam-status" style="color:#999;font-size:0.9rem;margin:10px 0 6px;">⏳ Starting camera...</p>
+      <button id="detect-btn" class="btn" style="padding:12px 32px;font-size:1rem;margin-top:4px;" disabled>
+        📸 Detect My Mood
+      </button>
+    </div>
+
+    <!-- Manual mood buttons -->
+    <div style="border-top:1px solid #eee;padding-top:20px;margin-top:8px;">
+      <p style="color:#aaa;font-size:0.85rem;margin-bottom:14px;">— or select mood manually —</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:480px;margin:0 auto;">
+        <button onclick="submitMood('happy')"     class="mood-btn">😄<br><span>Happy</span></button>
+        <button onclick="submitMood('sad')"       class="mood-btn">😢<br><span>Sad</span></button>
+        <button onclick="submitMood('angry')"     class="mood-btn">😠<br><span>Angry</span></button>
+        <button onclick="submitMood('tired')"     class="mood-btn">😴<br><span>Tired</span></button>
+        <button onclick="submitMood('surprised')" class="mood-btn">😲<br><span>Surprised</span></button>
+        <button onclick="submitMood('neutral')"   class="mood-btn">😐<br><span>Neutral</span></button>
+        <button onclick="submitMood('fearful')"   class="mood-btn">😨<br><span>Fearful</span></button>
+        <button onclick="submitMood('disgusted')" class="mood-btn">🤢<br><span>Disgusted</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="result-section" style="display:none;margin-top:8px;">
+    <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width:480px;margin:0 auto;text-align:left;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div id="mood-emoji" style="font-size:3.5rem;"></div>
+        <h2 id="mood-label" style="color:#e65c00;margin:8px 0 4px;"></h2>
+        <p id="mood-reason" style="color:#777;font-size:0.95rem;"></p>
+      </div>
+      <p style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:#bbb;margin-bottom:12px;">🍽️ Recommended for you</p>
+      <div id="food-cards"></div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="tryAgain()" class="btn" style="background:white;color:#e65c00;border:2px solid #e65c00;">🔄 Try Again</button>
+        <a href="/cart" class="btn">🛒 View Cart</a>
+        <a href="/menu" class="btn" style="background:white;color:#e65c00;border:2px solid #e65c00;">📋 Full Menu</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mood-btn { background:white;border:2px solid #e65c00;color:#333;padding:12px 16px;border-radius:12px;cursor:pointer;font-size:1.3rem;width:85px;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  .mood-btn span { display:block;font-size:0.72rem;color:#777;margin-top:4px; }
+  .mood-btn:hover { background:#e65c00;color:white;transform:scale(1.05); }
+  .mood-btn:hover span { color:white; }
+  .food-card { display:flex;justify-content:space-between;align-items:center;background:#fff8f5;border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:4px solid #e65c00; }
+  .food-card strong { font-size:0.95rem; }
+  .food-card p { font-size:0.8rem;color:#999;margin-top:3px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<script>
+  const video     = document.getElementById('video');
+  const canvas    = document.getElementById('overlay');
+  const statusEl  = document.getElementById('cam-status');
+  const detectBtn = document.getElementById('detect-btn');
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+
+  let modelsLoaded = false;
+
+  // ── 1. Start camera immediately ──
+  function startCamera() {
+    // camera requires https OR localhost
+    const isSecure = location.protocol === 'https:' ||
+                     location.hostname === 'localhost' ||
+                     location.hostname === '127.0.0.1';
+    if (!isSecure) {
+      statusEl.innerHTML = '⚠️ Camera needs <b>localhost</b>. Open: <a href="http://127.0.0.1:5000/mood" style="color:#e65c00;">http://127.0.0.1:5000/mood</a>';
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusEl.textContent = '⚠️ Camera not supported in this browser. Use Chrome.';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        statusEl.textContent = '📷 Camera on! Loading face detection...';
+        loadModels();
+      })
+      .catch(err => {
+        if (err.name === 'NotAllowedError') {
+          statusEl.textContent = '⚠️ Camera permission denied. Click the 🔒 icon in address bar and allow camera.';
+        } else if (err.name === 'NotFoundError') {
+          statusEl.textContent = '⚠️ No camera found on this device.';
+        } else {
+          statusEl.textContent = '⚠️ Camera error: ' + err.message;
+        }
+        console.error('Camera error:', err);
+      });
+  }
+
+  // ── 2. Load face-api models ──
+  function loadModels() {
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+    ]).then(() => {
+      modelsLoaded = true;
+      detectBtn.disabled = false;
+      statusEl.textContent = '✅ Ready! Click "Detect My Mood" or choose manually below.';
+    }).catch(err => {
+      statusEl.textContent = '⚠️ Model load failed. Use mood buttons below.';
+      console.error('Model error:', err);
+    });
+  }
+
+  // ── 3. Detect mood from camera ──
+  detectBtn.addEventListener('click', async () => {
+    if (!modelsLoaded) return;
+    statusEl.textContent = '🔍 Analyzing your face...';
+    detectBtn.disabled = true;
+
+    try {
+      const result = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+        .withFaceExpressions();
+
+      if (!result) {
+        statusEl.textContent = '😕 No face detected. Move closer or use buttons below.';
+        detectBtn.disabled = false;
+        return;
+      }
+
+      // Draw detection box
+      faceapi.matchDimensions(canvas, { width: video.videoWidth, height: video.videoHeight });
+      const resized = faceapi.resizeResults(result, { width: video.videoWidth, height: video.videoHeight });
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      faceapi.draw.drawDetections(canvas, resized);
+
+      const emotion = Object.entries(result.expressions).sort((a, b) => b[1] - a[1])[0][0];
+      statusEl.textContent = '✅ Detected: ' + emotion.charAt(0).toUpperCase() + emotion.slice(1);
+
+      // Stop camera stream
+      video.srcObject.getTracks().forEach(t => t.stop());
+
+      setTimeout(() => submitMood(emotion), 800);
+    } catch (e) {
+      statusEl.textContent = '⚠️ Detection error. Use mood buttons below.';
+      detectBtn.disabled = false;
+      console.error(e);
+    }
+  });
+
+  // ── 4. Submit mood to Flask ──
+  async function submitMood(emotion) {
+    document.getElementById('mood-select-section').style.display = 'none';
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('mood-emoji').textContent = '⏳';
+    document.getElementById('mood-label').textContent = 'Getting suggestions...';
+    document.getElementById('mood-reason').textContent = '';
+    document.getElementById('food-cards').innerHTML = '';
+
+    try {
+      const res  = await fetch('/mood_result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emotion })
+      });
+      const data = await res.json();
+      showResult(emotion, data);
+    } catch (e) {
+      document.getElementById('mood-label').textContent = '⚠️ Server error. Restart Flask.';
+    }
+  }
+
+  // ── 5. Show food result cards ──
+  function showResult(emotion, data) {
+    document.getElementById('mood-emoji').textContent = data.info.emoji;
+    document.getElementById('mood-label').textContent = 'You feel ' + emotion.charAt(0).toUpperCase() + emotion.slice(1) + '!';
+    document.getElementById('mood-reason').textContent = data.info.reason;
+
+    const fc = document.getElementById('food-cards');
+    if (!data.suggestions || data.suggestions.length === 0) {
+      fc.innerHTML = '<p style="color:#999;text-align:center;">No suggestions found.</p>';
+      return;
+    }
+    fc.innerHTML = '';
+    data.suggestions.forEach(item => {
+      fc.innerHTML += `
+        <div class="food-card">
+          <div>
+            <strong>${item.name}</strong>
+            <p>₹${item.price} &nbsp;|&nbsp; ${item.calories} kcal &nbsp;|&nbsp; ${item.category}</p>
+          </div>
+          <a href="/add_mood_item/${item.id}"
+            style="background:#e65c00;color:white;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:0.85rem;white-space:nowrap;">
+            + Add
+          </a>
+        </div>`;
+    });
+  }
+
+  function tryAgain() {
+    document.getElementById('result-section').style.display = 'none';
+    document.getElementById('mood-select-section').style.display = 'block';
+    detectBtn.disabled = !modelsLoaded;
+    statusEl.textContent = modelsLoaded ? '✅ Ready! Click Detect My Mood.' : '⏳ Starting camera...';
+    startCamera();
+  }
+
+  // Start camera right away — no waiting for DOMContentLoaded needed
+  // because this script runs after the HTML elements are already in the DOM
+  startCamera();
+</script>
+{% endblock %}

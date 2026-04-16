@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align:center;padding:40px 0;">
+  <div style="font-size:3rem;">✅</div>
+  <h2 style="margin:12px 0;">Order Placed Successfully!</h2>
+  <p style="color:#777;">{{ order_time }}</p>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Item</th><th>Price</th></tr>
+  </thead>
+  <tbody>
+    {% for item in cart %}
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>₹{{ item.price }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <td>Subtotal</td>
+      <td>₹{{ total }}</td>
+    </tr>
+    {% if offer and offer.type != 'none' %}
+    <tr style="color:green;">
+      <td>🎉 Offer Applied: {{ offer.label }}</td>
+      <td>- ₹{{ discount }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td><strong>Total Payable</strong></td>
+      <td><strong>₹{{ final_total }}</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="margin-top:24px;text-align:center;">
+  <p style="color:#777;margin-bottom:16px;">Pay via UPI</p>
+  <div style="background:white;display:inline-block;padding:16px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+    <p style="font-size:1.5rem;">📱</p>
+    <p style="font-weight:bold;">UPI ID: restaurant@upi</p>
+    <p style="color:#e65c00;font-size:1.2rem;">₹{{ final_total }}</p>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:24px;display:flex;gap:12px;justify-content:center;">
+  <a href="/menu" class="btn">Order More</a>
+  <a href="/spin" class="btn" style="background:white;color:#e65c00;border:2px solid #e65c00;">🎡 Spin Again</a>
+</div>
+
+{% endblock %}

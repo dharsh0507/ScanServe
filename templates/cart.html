@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🛒 Your Cart</h2>
+
+{% if cart %}
+<table>
+  <thead>
+    <tr><th>Item</th><th>Category</th><th>Price</th></tr>
+  </thead>
+  <tbody>
+    {% for item in cart %}
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.category }}</td>
+      <td>₹{{ item.price }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <td colspan="2"><strong>Total</strong></td>
+      <td><strong>₹{{ total }}</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<form method="POST" action="/place_order" style="margin-top:20px;">
+  <button type="submit" class="btn" style="padding:12px 32px;font-size:1rem;">✅ Place Order & Pay</button>
+</form>
+
+{% else %}
+<p>Your cart is empty. <a href="/menu" style="color:#e65c00;">Browse Menu</a></p>
+{% endif %}
+
+{% endblock %}

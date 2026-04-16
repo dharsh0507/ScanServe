@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🕐 {{ time_slot | capitalize }} Menu</h2>
+
+<div class="section-title">⭐ AI Suggestions for You</div>
+{% for item in suggestions %}
+<div class="card">
+  <div class="card-info">
+    <h3>{{ item.name }} {% if item.popular %}<span class="badge">🔥 Popular</span>{% endif %}</h3>
+    <p>₹{{ item.price }} &nbsp;|&nbsp; {{ item.calories }} kcal &nbsp;|&nbsp; {{ item.category }}</p>
+  </div>
+  <a href="/add_to_cart/{{ item.id }}" class="btn">+ Add</a>
+</div>
+{% endfor %}
+
+<div class="section-title">📋 Full {{ time_slot | capitalize }} Menu</div>
+{% for item in all_items %}
+<div class="card">
+  <div class="card-info">
+    <h3>{{ item.name }}</h3>
+    <p>₹{{ item.price }} &nbsp;|&nbsp; {{ item.calories }} kcal &nbsp;|&nbsp; {{ item.category }}</p>
+  </div>
+  <a href="/add_to_cart/{{ item.id }}" class="btn">+ Add</a>
+</div>
+{% endfor %}
+
+{% if cart_count > 0 %}
+<div style="position:fixed;bottom:20px;right:20px;">
+  <a href="/cart" class="btn" style="padding:12px 24px;font-size:1rem;">🛒 View Cart ({{ cart_count }})</a>
+</div>
+{% endif %}
+
+{% endblock %}
