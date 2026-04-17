@@ -1,53 +1,112 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>📊 Analytics Dashboard</h2>
+<div class="page-title">📊 Analytics Dashboard</div>
 
-<div style="display:flex;gap:16px;margin-bottom:24px;">
-  <div class="card" style="flex:1;display:block;">
-    <p class="section-title">Total Orders</p>
-    <h2 style="font-size:2rem;">{{ total_orders }}</h2>
+<!-- Date Selector -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+  <form method="GET" action="/dashboard" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <label style="font-size:0.82rem;color:#999;font-weight:600;">📅 View Date:</label>
+    <select name="date" onchange="this.form.submit()"
+      style="padding:8px 14px;border-radius:20px;border:2px solid #ffe0cc;font-family:Poppins,sans-serif;font-size:0.85rem;color:#e65c00;font-weight:600;background:white;cursor:pointer;outline:none;">
+      {% for d in all_dates %}
+      <option value="{{ d }}" {% if d == selected %}selected{% endif %}>
+        {{ d }} {% if d == today %}(Today){% endif %}
+      </option>
+      {% endfor %}
+      {% if not all_dates %}
+      <option value="{{ today }}">{{ today }} (Today)</option>
+      {% endif %}
+    </select>
+  </form>
+  {% if selected == today %}
+  <span style="background:linear-gradient(135deg,#e65c00,#f9a825);color:white;padding:5px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;">🟢 Live Today</span>
+  {% else %}
+  <span style="background:#f0f0f0;color:#999;padding:5px 14px;border-radius:20px;font-size:0.75rem;font-weight:600;">📁 Past Record</span>
+  {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+  <div class="stat-card">
+    <div style="font-size:2rem;margin-bottom:6px;">🧾</div>
+    <div class="stat-num">{{ total_orders }}</div>
+    <div class="stat-label">Orders — {{ selected }}</div>
   </div>
-  <div class="card" style="flex:1;display:block;">
-    <p class="section-title">Total Revenue</p>
-    <h2 style="font-size:2rem;">₹{{ total_revenue }}</h2>
+  <div class="stat-card">
+    <div style="font-size:2rem;margin-bottom:6px;">💰</div>
+    <div class="stat-num">₹{{ total_revenue }}</div>
+    <div class="stat-label">Revenue — {{ selected }}</div>
   </div>
 </div>
 
-<div class="section-title">🔥 Most Ordered Items</div>
-<table>
-  <thead><tr><th>Item</th><th>Orders</th></tr></thead>
-  <tbody>
+<!-- Most Ordered -->
+<div class="section-title">🔥 Most Ordered Dishes</div>
+<div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:24px;">
+  {% if item_counts %}
+    {% set max_count = item_counts[0][1] %}
     {% for name, count in item_counts %}
-    <tr>
-      <td>{{ name }}</td>
-      <td>
-        <div style="background:#fff3e0;border-radius:4px;overflow:hidden;">
-          <div style="background:#e65c00;height:20px;width:{{ [count * 20, 100] | min }}%;padding-left:8px;color:white;font-size:0.8rem;line-height:20px;">{{ count }}</div>
-        </div>
-      </td>
-    </tr>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:0.88rem;font-weight:600;">{{ name }}</span>
+        <span style="font-size:0.82rem;color:#e65c00;font-weight:700;">{{ count }} order{{ 's' if count > 1 }}</span>
+      </div>
+      <div style="background:#fef3ec;border-radius:20px;height:12px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,#e65c00,#f9a825);height:100%;border-radius:20px;width:{{ ((count / max_count) * 100) | int }}%;transition:width 0.6s ease;"></div>
+      </div>
+    </div>
     {% endfor %}
-    {% if not item_counts %}
-    <tr><td colspan="2" style="color:#999;">No orders yet</td></tr>
-    {% endif %}
-  </tbody>
-</table>
+  {% else %}
+    <div style="text-align:center;padding:30px;color:#bbb;">
+      <div style="font-size:2.5rem;margin-bottom:8px;">📭</div>
+      <p>No orders on {{ selected }}.</p>
+    </div>
+  {% endif %}
+</div>
 
-<div class="section-title" style="margin-top:24px;">⏰ Orders by Hour</div>
-<table>
-  <thead><tr><th>Hour</th><th>Orders</th></tr></thead>
-  <tbody>
+<!-- Orders by Hour -->
+<div class="section-title">⏰ Peak Hours</div>
+<div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:24px;">
+  {% if hourly %}
+    {% set max_h = hourly | map(attribute=1) | max %}
     {% for hour, count in hourly %}
-    <tr>
-      <td>{{ hour }}:00</td>
-      <td>{{ count }}</td>
-    </tr>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="font-size:0.82rem;color:#777;width:52px;flex-shrink:0;">{{ hour }}:00</span>
+      <div style="flex:1;background:#fef3ec;border-radius:20px;height:12px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,#f9a825,#e65c00);height:100%;border-radius:20px;width:{{ ((count / max_h) * 100) | int }}%;"></div>
+      </div>
+      <span style="font-size:0.82rem;font-weight:700;color:#e65c00;width:24px;">{{ count }}</span>
+    </div>
     {% endfor %}
-    {% if not hourly %}
-    <tr><td colspan="2" style="color:#999;">No data yet</td></tr>
-    {% endif %}
-  </tbody>
-</table>
+  {% else %}
+    <div style="text-align:center;padding:30px;color:#bbb;">
+      <div style="font-size:2.5rem;margin-bottom:8px;">🕐</div>
+      <p>No hourly data for {{ selected }}.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- All Days Summary -->
+{% if all_dates | length > 1 %}
+<div class="section-title">📅 All Days Summary</div>
+<div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
+  <table>
+    <thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead>
+    <tbody>
+      {% for d in all_dates %}
+      <tr style="{% if d == selected %}background:#fff8f2;{% endif %}">
+        <td>
+          <a href="/dashboard?date={{ d }}" style="color:#e65c00;font-weight:600;text-decoration:none;">
+            {{ d }} {% if d == today %}<span class="badge">Today</span>{% endif %}
+          </a>
+        </td>
+        <td>{{ analytics_summary[d].orders }}</td>
+        <td>₹{{ analytics_summary[d].revenue }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
 {% endblock %}

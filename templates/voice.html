@@ -2,38 +2,39 @@
 {% block content %}
 
 <div style="text-align:center;">
-  <h2>🎙️ Voice Menu</h2>
-  <p style="color:#777;margin:8px 0 20px;">Click mic to hear all dishes, then say what you want!</p>
-
-  <div style="margin-bottom:20px;">
-    <button onclick="setLang('en')" id="btn-en" class="lang-btn active-lang">🇬🇧 English</button>
-    <button onclick="setLang('ta')" id="btn-ta" class="lang-btn">🇮🇳 Tamil</button>
-  </div>
+  <div class="page-title" style="text-align:center;">🎙️ Voice Menu</div>
+  <div class="page-sub" style="text-align:center;">Click mic — hear all dishes, then say what you want!</div>
 
   <div id="mic-circle" onclick="handleMicClick()"
-    style="width:110px;height:110px;border-radius:50%;background:#e65c00;display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;box-shadow:0 4px 20px rgba(230,92,0,0.4);">
-    <span id="mic-icon" style="font-size:2.8rem;">🎤</span>
+    style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#e65c00,#f9a825);display:flex;align-items:center;justify-content:center;margin:24px auto 0;cursor:pointer;box-shadow:0 6px 24px rgba(230,92,0,0.4);">
+    <span id="mic-icon" style="font-size:3rem;">🎤</span>
   </div>
 
-  <p id="voice-status" style="color:#e65c00;font-weight:bold;margin:14px 0 4px;font-size:1rem;">Tap mic to hear menu</p>
-  <p id="transcript" style="font-size:1rem;color:#555;min-height:24px;"></p>
+  <p id="voice-status" style="color:#e65c00;font-weight:700;margin:16px 0 4px;font-size:1rem;">Tap mic to hear menu</p>
+  <p id="transcript" style="font-size:1rem;color:#555;min-height:24px;font-style:italic;"></p>
 
   <button id="stop-btn" onclick="hardStop()"
-    style="display:none;margin-top:8px;background:#cc0000;color:white;border:none;padding:10px 28px;border-radius:6px;font-size:1rem;cursor:pointer;">
+    style="display:none;margin-top:10px;background:#cc0000;color:white;border:none;padding:10px 28px;border-radius:25px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">
     ⏹ Stop
   </button>
 
-  <div id="results" style="max-width:600px;margin:20px auto;text-align:left;"></div>
+  <div id="results" style="max-width:640px;margin:20px auto;text-align:left;"></div>
 
-  <div id="all-items" style="max-width:600px;margin:20px auto;text-align:left;">
-    <p class="section-title">🍽️ Full Menu</p>
+  <div id="all-items" style="max-width:640px;margin:20px auto;text-align:left;">
+    <div class="section-title">🍽️ Full Menu</div>
     {% for slot, items in menu.items() %}
-      <p class="section-title">{{ slot | capitalize }}</p>
+      <div class="section-title">{{ slot | capitalize }}</div>
       {% for item in items %}
-      <div class="card">
-        <div class="card-info">
-          <h3>{{ item.name }}</h3>
-          <p>₹{{ item.price }} | {{ item.calories }} kcal | {{ item.category }}</p>
+      <div class="food-card">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+          <img src="{{ item.img }}" alt="{{ item.name }}"
+            style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#fef3ec;"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <span style="display:none;width:56px;height:56px;border-radius:10px;background:#fff3e0;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">{{ item.emoji }}</span>
+          <div>
+            <h3>{{ item.name }}</h3>
+            <div class="meta"><span>💰 ₹{{ item.price }}</span><span>{{ item.category }}</span></div>
+          </div>
         </div>
         <a href="/add_to_cart/{{ item.id }}" class="btn">+ Add</a>
       </div>
@@ -43,102 +44,37 @@
 </div>
 
 <style>
-  .lang-btn { padding:8px 20px;border-radius:20px;border:2px solid #e65c00;background:white;color:#e65c00;cursor:pointer;font-size:0.9rem;margin:0 6px;transition:all 0.2s; }
-  .active-lang { background:#e65c00 !important;color:white !important; }
-  #mic-circle.speaking { background:#f7a800;animation:mpulse 1s infinite; }
-  #mic-circle.listening { background:#cc0000;animation:mpulse 0.6s infinite; }
-  @keyframes mpulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.1)} }
+  #mic-circle.speaking { animation: mpulse 1s infinite; background: linear-gradient(135deg,#f9a825,#e65c00); }
+  #mic-circle.listening { animation: mpulse 0.6s infinite; background: linear-gradient(135deg,#cc0000,#ff4444); }
+  @keyframes mpulse { 0%,100%{transform:scale(1);box-shadow:0 6px 24px rgba(230,92,0,0.4)} 50%{transform:scale(1.1);box-shadow:0 10px 32px rgba(230,92,0,0.6)} }
 </style>
 
 <script>
 const menuData = {{ menu | tojson }};
 
-// Each dish: spoken text + Tamil display text + keywords user might say
-const dishes = {
-  "Idli Sambar":          { say:"Idli Sambar",            tamil:"இட்லி சாம்பார்",   keys:["idli","sambar","idly"] },
-  "Masala Dosa":          { say:"Masala Dosai",           tamil:"மசாலா தோசை",       keys:["dosa","dosai","masala dosa"] },
-  "Poha":                 { say:"Poha",                   tamil:"பொஹா",              keys:["poha"] },
-  "Upma":                 { say:"Upma",                   tamil:"உப்மா",             keys:["upma"] },
-  "Veg Thali":            { say:"Veg Thali",              tamil:"வெஜ் தாலி",        keys:["thali","veg thali","meals"] },
-  "Chicken Biryani":      { say:"Chicken Biriyani",       tamil:"சிக்கன் பிரியாணி", keys:["biryani","biriyani","chicken biryani","chicken"] },
-  "Paneer Butter Masala": { say:"Paneer Butter Masala",   tamil:"பனீர் பட்டர் மசாலா",keys:["paneer","butter masala","paneer masala"] },
-  "Dal Rice":             { say:"Dal Rice",               tamil:"பருப்பு சாதம்",    keys:["dal","dal rice","paruppu"] },
-  "Butter Naan + Curry":  { say:"Butter Naan with Curry", tamil:"பட்டர் நான் கறி",  keys:["naan","butter naan","curry"] },
-  "Fried Rice":           { say:"Fried Rice",             tamil:"பிரைட் ரைஸ்",      keys:["fried rice","fried"] },
-  "Chapati + Dal":        { say:"Chapati with Dal",       tamil:"சப்பாத்தி பருப்பு",keys:["chapati","chapathi"] },
-  "Grilled Chicken":      { say:"Grilled Chicken",        tamil:"கிரில்டு சிக்கன்", keys:["grilled","grilled chicken"] },
-};
-
-// ── Tamil number words (spoken phonetically so en-IN TTS reads correctly) ──
-const tamilOnes = ['','ondru','irandu','moondru','naangu','ainthu','aaru','ezhu','ettu','onbathu','pathu',
-  'padhinondru','pannirendu','padhinmoondru','padhinaangu','padhinainthu','padhinaaru','padhinezhu','padhinettu','pathinonbathu'];
-const tamilTens = ['','pathu','iruppathu','mupppathu','naarppathu','aimpathu','arubathu','ezhubathu','enbathu','thonnooru'];
-
-function toTamilWords(n) {
-  if (n === 0) return 'soonam';
-  if (n < 20) return tamilOnes[n];
-  if (n < 100) {
-    const t = tamilTens[Math.floor(n/10)];
-    const o = tamilOnes[n % 10];
-    return o ? t + ' ' + o : t;
-  }
-  if (n < 1000) {
-    const h = Math.floor(n/100);
-    const rest = n % 100;
-    const prefix = h === 1 ? 'nooru' : tamilOnes[h] + ' nooru';
-    return rest ? prefix + ' ' + toTamilWords(rest) : prefix;
-  }
-  return n.toString(); // fallback for large numbers
-}
-
 const LANG = {
-  en: {
-    tts: "en-IN", rec: "en-IN",
-    intro:   "Welcome! Here are today's available dishes.",
-    slots:   {breakfast:"Breakfast items.",lunch:"Lunch items.",dinner:"Dinner items."},
-    price:   (n,p) => `${n}, ${p} rupees.`,
-    prompt:  "Now please say the dish name you want to order.",
-    found:   (n) => `${n} is available!`,
-    none:    "Sorry, dish not found. Please try again.",
-    retry:   "Please say the dish name again."
-  },
-  ta: {
-    tts: "en-IN", rec: "en-IN",
-    intro:   "Vanakkam! Indru kidaikkum unavugal.",
-    slots:   {breakfast:"Kaalai unavugal.",lunch:"Mathiya unavugal.",dinner:"Iravu unavugal."},
-    price:   (n,p) => `${n}, vilai ${toTamilWords(p)} rubaai.`,
-    prompt:  "Ipo neengal virum bum unavin peyarai sollunga.",
-    found:   (n) => `${n} kidaikkiRadhu!`,
-    none:    "Mannikkavum, antha unavu kidaikkavillai. Meendum sollunga.",
-    retry:   "Unavin peyarai meendum sollunga."
-  }
+  tts: "en-IN",
+  rec: "en-IN",
+  intro:   "Welcome to QRavings! Here are today's available dishes.",
+  slots:   { breakfast:"Breakfast items.", lunch:"Lunch items.", dinner:"Dinner items." },
+  price:   (n, p) => `${n}, ${p} rupees.`,
+  prompt:  "Please say the dish name you want to order.",
+  found:   (n) => `${n} is available! Adding to your options.`,
+  none:    "Sorry, I could not find that dish. Please try again.",
+  retry:   "Please say the dish name again."
 };
 
-let lang = 'en';
-let stopped = false;       // global stop flag checked inside queue
+let stopped = false;
 let recog = null;
 let keepAlive = null;
 
-function setLang(l) {
-  lang = l;
-  document.getElementById('btn-en').classList.toggle('active-lang', l==='en');
-  document.getElementById('btn-ta').classList.toggle('active-lang', l==='ta');
-}
-
-const statusEl   = document.getElementById('voice-status');
-const transcriptEl = document.getElementById('transcript');
 const micCircle  = document.getElementById('mic-circle');
 const micIcon    = document.getElementById('mic-icon');
+const statusEl   = document.getElementById('voice-status');
+const transcriptEl = document.getElementById('transcript');
 const stopBtn    = document.getElementById('stop-btn');
 
-function ui(status, icon, circleClass) {
-  statusEl.textContent = status;
-  micIcon.textContent  = icon;
-  micCircle.className  = circleClass ? 'speaking' : '';
-  if(circleClass === 'listening') micCircle.classList.add('listening');
-}
-
-// ── Hard stop — kills everything immediately ──
+// ── Hard stop ──
 function hardStop() {
   stopped = true;
   window.speechSynthesis.cancel();
@@ -151,17 +87,14 @@ function hardStop() {
   transcriptEl.textContent = '';
 }
 
-// ── Speak sentences one by one with stop-flag check ──
+// ── Speak sentences one by one ──
 function speakAll(sentences, onDone) {
   stopped = false;
   stopBtn.style.display = 'inline-block';
   micCircle.classList.add('speaking');
   micIcon.textContent = '🔊';
 
-  const ttsLang = LANG[lang].tts;
   let idx = 0;
-
-  // Chrome keepalive — prevents TTS from pausing after ~15s
   clearInterval(keepAlive);
   keepAlive = setInterval(() => {
     if (window.speechSynthesis.speaking) {
@@ -182,8 +115,8 @@ function speakAll(sentences, onDone) {
       return;
     }
     const utt = new SpeechSynthesisUtterance(sentences[idx]);
-    utt.lang  = ttsLang;
-    utt.rate  = 0.88;
+    utt.lang  = LANG.tts;
+    utt.rate  = 0.9;
     utt.onend   = () => { if (!stopped) { idx++; speakOne(); } };
     utt.onerror = () => { if (!stopped) { idx++; speakOne(); } };
     window.speechSynthesis.speak(utt);
@@ -192,16 +125,12 @@ function speakAll(sentences, onDone) {
 }
 
 function buildSentences() {
-  const L = LANG[lang];
-  const list = [L.intro];
+  const list = [LANG.intro];
   Object.entries(menuData).forEach(([slot, items]) => {
-    list.push(L.slots[slot]);
-    items.forEach(item => {
-      const name = lang === 'ta' ? (dishes[item.name]?.say || item.name) : item.name;
-      list.push(L.price(name, item.price));
-    });
+    list.push(LANG.slots[slot]);
+    items.forEach(item => list.push(LANG.price(item.name, item.price)));
   });
-  list.push(L.prompt);
+  list.push(LANG.prompt);
   return list;
 }
 
@@ -209,10 +138,10 @@ function buildSentences() {
 function startListening() {
   if (stopped) return;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { statusEl.textContent = '⚠️ Use Chrome browser.'; return; }
+  if (!SR) { statusEl.textContent = '⚠️ Use Chrome browser for voice support.'; return; }
 
   recog = new SR();
-  recog.lang = LANG[lang].rec;
+  recog.lang = LANG.rec;
   recog.interimResults = true;
   recog.continuous = false;
   recog.maxAlternatives = 5;
@@ -226,8 +155,8 @@ function startListening() {
   recog.onresult = (e) => {
     const text = Array.from(e.results).map(r => r[0].transcript).join('');
     transcriptEl.textContent = '"' + text + '"';
-    if (e.results[e.results.length-1].isFinal) {
-      const alts = Array.from(e.results[e.results.length-1]).map(a => a.transcript);
+    if (e.results[e.results.length - 1].isFinal) {
+      const alts = Array.from(e.results[e.results.length - 1]).map(a => a.transcript);
       matchDish(alts);
     }
   };
@@ -236,9 +165,8 @@ function startListening() {
     micCircle.classList.remove('listening');
     micIcon.textContent = '🎤';
     stopBtn.style.display = 'none';
-    if (!document.getElementById('results').innerHTML.trim() && !stopped) {
+    if (!document.getElementById('results').innerHTML.trim() && !stopped)
       statusEl.textContent = 'Tap mic to try again';
-    }
   };
 
   recog.onerror = (e) => {
@@ -247,28 +175,23 @@ function startListening() {
     stopBtn.style.display = 'none';
     if (e.error === 'no-speech') {
       statusEl.textContent = 'No speech heard. Tap mic to retry.';
-      speakAll([LANG[lang].retry], () => {});
+      speakAll([LANG.retry], () => {});
     } else {
-      statusEl.textContent = '⚠️ ' + e.error;
+      statusEl.textContent = '⚠️ ' + e.error + '. Tap mic to retry.';
     }
   };
 
   recog.start();
 }
 
-// ── Match spoken words to menu items ──
+// ── Match spoken words to menu ──
 function matchDish(alternatives) {
-  const L = LANG[lang];
   let matched = [];
-
   for (const alt of alternatives) {
     const q = alt.toLowerCase().trim();
     matched = Object.values(menuData).flat().filter(item => {
       const n = item.name.toLowerCase();
-      const keys = dishes[item.name]?.keys || [];
-      return n.includes(q) ||
-             q.includes(n) ||
-             keys.some(k => q.includes(k) || k.includes(q)) ||
+      return n.includes(q) || q.includes(n) ||
              q.split(' ').some(w => w.length > 2 && n.includes(w));
     });
     if (matched.length) break;
@@ -279,37 +202,39 @@ function matchDish(alternatives) {
 
   if (!matched.length) {
     resultsEl.innerHTML = `
-      <div style="text-align:center;padding:24px;background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+      <div style="text-align:center;padding:28px;background:white;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
         <p style="font-size:2rem;">😕</p>
-        <p style="color:#999;margin:8px 0;">${L.none}</p>
-        <a href="#" onclick="resetAll()" style="color:#e65c00;">Show full menu</a>
+        <p style="color:#999;margin:8px 0;">${LANG.none}</p>
+        <a href="#" onclick="resetAll()" style="color:#e65c00;font-weight:600;">Show full menu</a>
       </div>`;
-    speakAll([L.none], () => {});
+    speakAll([LANG.none], () => {});
     return;
   }
 
   statusEl.textContent = matched.length + ' item(s) found';
-  resultsEl.innerHTML = `<p class="section-title">Results <a href="#" onclick="resetAll()" style="color:#e65c00;margin-left:8px;font-size:0.8rem;">Clear</a></p>`;
+  resultsEl.innerHTML = `<div class="section-title">Results <a href="#" onclick="resetAll()" style="color:#e65c00;margin-left:8px;font-size:0.75rem;font-weight:600;">Clear</a></div>`;
   matched.forEach(item => {
-    const tamilText = dishes[item.name]?.tamil || '';
     resultsEl.innerHTML += `
-      <div class="card">
-        <div class="card-info">
-          <h3>${item.name} ${lang==='ta' && tamilText ? '<span style="color:#e65c00;font-size:0.85rem;">('+tamilText+')</span>' : ''}</h3>
-          <p>₹${item.price} | ${item.calories} kcal | ${item.category}</p>
+      <div class="food-card">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+          <img src="${item.img || ''}" alt="${item.name}"
+            style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#fef3ec;"
+            onerror="this.style.display='none'">
+          <div>
+            <h3>${item.name}</h3>
+            <div class="meta"><span>💰 ₹${item.price}</span><span>${item.category}</span></div>
+          </div>
         </div>
         <a href="/add_to_cart/${item.id}" class="btn">+ Add</a>
       </div>`;
   });
 
-  const spokenName = lang === 'ta' ? (dishes[matched[0].name]?.say || matched[0].name) : matched[0].name;
-  speakAll([L.found(spokenName)], () => {});
+  speakAll([LANG.found(matched[0].name)], () => {});
 }
 
 function handleMicClick() {
   if (micCircle.classList.contains('speaking') || micCircle.classList.contains('listening')) {
-    hardStop();
-    return;
+    hardStop(); return;
   }
   transcriptEl.textContent = '';
   document.getElementById('results').innerHTML = '';

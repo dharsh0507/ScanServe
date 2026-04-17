@@ -3,42 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart QR Menu</title>
+  <title>QRavings 🍽️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
-    nav { background: #e65c00; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-    nav a { color: white; text-decoration: none; font-weight: bold; margin-left: 16px; }
-    nav .brand { font-size: 1.2rem; }
-    .container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
-    h2 { margin-bottom: 16px; color: #e65c00; }
-    .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
-    .card-info h3 { font-size: 1rem; }
-    .card-info p { font-size: 0.85rem; color: #777; margin-top: 4px; }
-    .badge { background: #fff3e0; color: #e65c00; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; margin-left: 8px; }
-    .btn { background: #e65c00; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; display: inline-block; }
-    .btn:hover { background: #cc5200; }
-    .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin: 20px 0 8px; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-    th { background: #e65c00; color: white; padding: 10px; text-align: left; }
-    td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(160deg, #fff8f0 0%, #fff3e8 50%, #fff8f0 100%);
+      color: #2d2d2d;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Floating food emojis background ── */
+    .food-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .food-bg span {
+      position: absolute;
+      opacity: 0;
+      animation: floatUp linear infinite;
+      user-select: none;
+      filter: drop-shadow(0 2px 4px rgba(230,92,0,0.2));
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) rotate(0deg) scale(0.8);  opacity: 0; }
+      10%  { opacity: 0.18; }
+      90%  { opacity: 0.18; }
+      100% { transform: translateY(-140px) rotate(360deg) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Navbar ── */
+    nav {
+      background: linear-gradient(135deg, #e65c00 0%, #ff8c00 50%, #f9a825 100%);
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(230,92,0,0.5);
+      height: 60px;
+    }
+    .brand {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: white;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      animation: brandPulse 3s ease-in-out infinite;
+    }
+    @keyframes brandPulse {
+      0%,100% { transform: scale(1);   text-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+      50%     { transform: scale(1.05); text-shadow: 0 4px 16px rgba(255,255,255,0.4); }
+    }
+    .nav-links { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 20px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.28);
+      transform: translateY(-2px);
+    }
+
+    /* ── Container ── */
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Section Title ── */
+    .section-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #e65c00;
+      font-weight: 700;
+      margin: 28px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(to right, #ffe0cc, transparent);
+      border-radius: 2px;
+    }
+
+    /* ── Food Card ── */
+    .food-card {
+      background: white;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #f0f0f0;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      animation: slideIn 0.4s ease both;
+    }
+    .food-card:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 8px 24px rgba(230,92,0,0.15);
+      border-left-color: #e65c00;
+    }
+    .food-card.suggested {
+      border-left-color: #f9a825;
+      background: linear-gradient(to right, #fffbf0, white);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .food-card h3 { font-size: 0.95rem; font-weight: 600; }
+    .food-card .meta { font-size: 0.76rem; color: #aaa; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ── Badge ── */
+    .badge {
+      background: #fff3e0;
+      color: #e65c00;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      margin-left: 5px;
+      animation: badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .badge.green { background: #e8f5e9; color: #2e7d32; }
+    @keyframes badgePop { from{transform:scale(0)} to{transform:scale(1)} }
+
+    /* ── Buttons ── */
+    .btn {
+      background: linear-gradient(135deg, #e65c00, #f9a825);
+      color: white;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-block;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(230,92,0,0.35);
+      white-space: nowrap;
+      font-family: 'Poppins', sans-serif;
+    }
+    .btn:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 6px 18px rgba(230,92,0,0.45);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-outline {
+      background: white;
+      color: #e65c00;
+      border: 2px solid #e65c00;
+      box-shadow: none;
+    }
+    .btn-outline:hover { background: #fff3e0; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    th { background: linear-gradient(135deg, #e65c00, #f9a825); color: white; padding: 13px 16px; text-align: left; font-size: 0.83rem; font-weight: 700; }
+    td { padding: 12px 16px; border-bottom: 1px solid #fef3ec; font-size: 0.86rem; }
+    tr:last-child td { border-bottom: none; }
+    tr { transition: background 0.15s; }
+    tr:hover td { background: #fff8f2; }
+
+    /* ── Stat Card ── */
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      text-align: center;
+      flex: 1;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card .stat-num { font-size: 2rem; font-weight: 800; color: #e65c00; }
+    .stat-card .stat-label { font-size: 0.75rem; color: #bbb; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Floating Cart ── */
+    .float-cart { position: fixed; bottom: 24px; right: 24px; z-index: 150; }
+    .float-cart a {
+      background: linear-gradient(135deg, #e65c00, #f9a825);
+      color: white;
+      padding: 14px 22px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: 0 6px 24px rgba(230,92,0,0.45);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: cartBounce 2s ease-in-out infinite;
+    }
+    @keyframes cartBounce {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%     { transform: translateY(-6px) scale(1.03); }
+    }
+
+    /* ── Page Title ── */
+    .page-title { font-size: 1.4rem; font-weight: 800; color: #e65c00; margin-bottom: 4px; }
+    .page-sub   { font-size: 0.83rem; color: #bbb; margin-bottom: 20px; }
+
+    /* ── Category Tab ── */
+    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      background: white;
+      border: 2px solid #ffe0cc;
+      color: #e65c00;
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: 'Poppins', sans-serif;
+    }
+    .cat-tab:hover, .cat-tab.active {
+      background: linear-gradient(135deg, #e65c00, #f9a825);
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(230,92,0,0.3);
+    }
   </style>
 </head>
 <body>
-  <nav>
-    <span class="brand">🍽️ Smart QR Menu</span>
-    <div>
-      <a href="/menu">Menu</a>
-      <a href="/mood">😊 Mood</a>
-      <a href="/voice">🎙️ Voice</a>
-      <a href="/spin">🎡 Spin</a>
-      <a href="/cart">🛒 Cart</a>
-      <a href="/dashboard">📊 Dashboard</a>
-      <a href="/generate_qr">QR Code</a>
-    </div>
-  </nav>
-  <div class="container">
-    {% block content %}{% endblock %}
+
+<!-- Floating food emoji background -->
+<div class="food-bg" id="foodBg"></div>
+
+<nav>
+  <span class="brand">🍽️ QRavings</span>
+  <div class="nav-links">
+    <a href="/menu">🏠 Menu</a>
+    <a href="/mood">😊 Mood</a>
+    <a href="/voice">🎙️ Voice</a>
+    <a href="/spin">🎡 Spin</a>
+    <a href="/cart">🛒 Cart</a>
+    <a href="/dashboard">📊 Stats</a>
+    <a href="/generate_qr">📱 QR</a>
   </div>
+</nav>
+
+<div class="container">
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+  // Generate floating food emojis
+  const emojis = ['🍕','🍔','🍟','🌮','🍜','🍛','🍱','🍣','🥗','🍰','🧁','🍩','🍦','🥤','🧃','🍫','🥐','🍳','🥘','🍲','🥭','🍓','🍇','🍉','🥤','🧋','🍮','🥞','🍗','🍖','🥙','🌯'];
+  const bg = document.getElementById('foodBg');
+  emojis.forEach((em, i) => {
+    const span = document.createElement('span');
+    span.textContent = em;
+    span.style.left        = (Math.random() * 100) + '%';
+    span.style.fontSize    = (1.6 + Math.random() * 1.6) + 'rem';
+    span.style.animationDuration = (10 + Math.random() * 16) + 's';
+    span.style.animationDelay   = (Math.random() * 12) + 's';
+    bg.appendChild(span);
+  });
+</script>
 </body>
 </html>

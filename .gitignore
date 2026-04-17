@@ -1,0 +1,17 @@
+# Runtime data
+analytics.json
+__pycache__/
+*.pyc
+*.pyo
+
+# Downloaded images (run download_images.py to regenerate)
+static/images/
+
+# Environment
+.env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/

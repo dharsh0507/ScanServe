@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome — DD Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #1a0a00;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Animated gradient background ── */
+    .bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1a0a00, #3d1500, #1a0a00);
+      background-size: 400% 400%;
+      animation: bgShift 6s ease infinite;
+      z-index: 0;
+    }
+    @keyframes bgShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+
+    /* ── Floating food emojis ── */
+    .food-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .food-bg span {
+      position: absolute;
+      opacity: 0;
+      animation: floatUp linear infinite;
+      user-select: none;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) rotate(0deg) scale(0.7); opacity: 0; }
+      10%  { opacity: 0.22; }
+      90%  { opacity: 0.22; }
+      100% { transform: translateY(-120px) rotate(360deg) scale(1.2); opacity: 0; }
+    }
+
+    /* ── Main card ── */
+    .card {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 48px 40px 40px;
+      max-width: 480px;
+      width: 90%;
+      animation: cardIn 1s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(60px) scale(0.85); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Plate icon ── */
+    .plate {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: plateSpin 3s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(249,168,37,0.6));
+    }
+    @keyframes plateSpin {
+      0%,100% { transform: rotate(-8deg) scale(1); }
+      50%     { transform: rotate(8deg) scale(1.1); }
+    }
+
+    /* ── Welcome text ── */
+    .welcome-line {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #f9a825;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      animation: fadeSlideDown 0.8s 0.3s ease both;
+    }
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .restaurant-name {
+      font-size: 3.2rem;
+      font-weight: 900;
+      color: white;
+      line-height: 1.1;
+      text-shadow: 0 4px 24px rgba(230,92,0,0.7);
+      animation: nameGlow 2s ease-in-out infinite, fadeSlideDown 0.8s 0.5s ease both;
+      margin-bottom: 6px;
+    }
+    @keyframes nameGlow {
+      0%,100% { text-shadow: 0 4px 24px rgba(230,92,0,0.7); }
+      50%     { text-shadow: 0 4px 40px rgba(249,168,37,1), 0 0 80px rgba(230,92,0,0.4); }
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      font-weight: 400;
+      margin-bottom: 32px;
+      animation: fadeSlideDown 0.8s 0.7s ease both;
+      font-style: italic;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      animation: fadeSlideDown 0.8s 0.9s ease both;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(249,168,37,0.5), transparent);
+    }
+    .divider span { font-size: 1.2rem; }
+
+    /* ── Scan QR Button ── */
+    .scan-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #e65c00, #f9a825);
+      color: white;
+      text-decoration: none;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      box-shadow: 0 8px 32px rgba(230,92,0,0.55);
+      animation: fadeSlideDown 0.8s 1.1s ease both, btnPulse 2s 2s ease-in-out infinite;
+      transition: transform 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .scan-btn:hover { transform: translateY(-3px) scale(1.04); }
+    @keyframes btnPulse {
+      0%,100% { box-shadow: 0 8px 32px rgba(230,92,0,0.55); }
+      50%     { box-shadow: 0 12px 48px rgba(249,168,37,0.8), 0 0 0 8px rgba(230,92,0,0.1); }
+    }
+
+    .scan-btn .qr-icon {
+      font-size: 1.4rem;
+      animation: qrBounce 1.5s ease-in-out infinite;
+    }
+    @keyframes qrBounce {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.2) rotate(10deg); }
+    }
+
+    /* ── Browse menu link ── */
+    .browse-link {
+      display: block;
+      margin-top: 18px;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.82rem;
+      text-decoration: none;
+      animation: fadeSlideDown 0.8s 1.3s ease both;
+      transition: color 0.2s;
+    }
+    .browse-link:hover { color: #f9a825; }
+
+    /* ── Food emoji strip ── */
+    .emoji-strip {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      margin-bottom: 28px;
+      animation: fadeSlideDown 0.8s 0.8s ease both;
+    }
+    .emoji-strip span {
+      animation: emojiWave ease-in-out infinite;
+    }
+    .emoji-strip span:nth-child(1) { animation-duration:1.8s; animation-delay:0s; }
+    .emoji-strip span:nth-child(2) { animation-duration:1.8s; animation-delay:0.15s; }
+    .emoji-strip span:nth-child(3) { animation-duration:1.8s; animation-delay:0.3s; }
+    .emoji-strip span:nth-child(4) { animation-duration:1.8s; animation-delay:0.45s; }
+    .emoji-strip span:nth-child(5) { animation-duration:1.8s; animation-delay:0.6s; }
+    @keyframes emojiWave {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- Floating food emojis -->
+<div class="food-bg" id="foodBg"></div>
+
+<div class="card">
+  <span class="plate">🍽️</span>
+
+  <p class="welcome-line">✦ Welcome to ✦</p>
+  <h1 class="restaurant-name">DD Restaurant</h1>
+  <p class="tagline">"Where every bite tells a story"</p>
+
+  <div class="emoji-strip">
+    <span>🍛</span><span>🍜</span><span>🍦</span><span>🥤</span><span>🍮</span>
+  </div>
+
+  <div class="divider"><span>📱</span></div>
+
+  <a href="/generate_qr" class="scan-btn">
+    <span class="qr-icon">📷</span>
+    Scan QR to Order
+  </a>
+
+  <a href="/menu" class="browse-link">or browse menu directly →</a>
+</div>
+
+<script>
+  const emojis = ['🍕','🍔','🍟','🌮','🍜','🍛','🍱','🍣','🥗','🍰','🧁','🍩','🍦','🥤','🍫','🍳','🥘','🍲','🥭','🍓','🍮','🍗','🍖','🌯','🥐','🧆'];
+  const bg = document.getElementById('foodBg');
+  emojis.forEach(em => {
+    const s = document.createElement('span');
+    s.textContent = em;
+    s.style.left              = (Math.random() * 100) + '%';
+    s.style.fontSize          = (1.4 + Math.random() * 1.8) + 'rem';
+    s.style.animationDuration = (10 + Math.random() * 14) + 's';
+    s.style.animationDelay    = (Math.random() * 10) + 's';
+    bg.appendChild(s);
+  });
+</script>
+</body>
+</html>

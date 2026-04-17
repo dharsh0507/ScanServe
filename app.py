@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
-from data import get_time_slot, get_suggestions, get_all_items, get_item_by_id, MENU, get_mood_suggestions, MOOD_FOOD, OFFERS, apply_offer, search_items
+from data import get_time_slot, get_suggestions, get_all_items, get_item_by_id, MENU, EXTRAS, get_mood_suggestions, MOOD_FOOD, OFFERS, apply_offer, search_items
 from datetime import datetime
 import json, os
 
@@ -11,16 +11,36 @@ ANALYTICS_FILE = "analytics.json"
 def load_analytics():
     if os.path.exists(ANALYTICS_FILE):
         with open(ANALYTICS_FILE) as f:
-            return json.load(f)
-    return {"orders": [], "item_counts": {}, "hourly": {}}
+            data = json.load(f)
+        # Migrate old flat format to daily format
+        if "daily" not in data:
+            old_date = data.get("orders", [{}])[0].get("time", get_today_key())[:10] if data.get("orders") else get_today_key()
+            data = {"daily": {old_date: {
+                "orders":      data.get("orders", []),
+                "item_counts": data.get("item_counts", {}),
+                "hourly":      data.get("hourly", {})
+            }}}
+            save_analytics(data)
+        return data
+    return {"daily": {}}
 
 def save_analytics(data):
     with open(ANALYTICS_FILE, "w") as f:
         json.dump(data, f)
 
+def get_today_key():
+    return datetime.now().strftime("%Y-%m-%d")
+
+def get_day_data(analytics, date_key):
+    return analytics["daily"].get(date_key, {"orders": [], "item_counts": {}, "hourly": {}})
+
+def ensure_day(analytics, date_key):
+    if date_key not in analytics["daily"]:
+        analytics["daily"][date_key] = {"orders": [], "item_counts": {}, "hourly": {}}
+
 @app.route("/")
 def index():
-    return redirect(url_for("menu"))
+    return render_template("welcome.html")
 
 @app.route("/menu")
 def menu():
@@ -33,6 +53,7 @@ def menu():
         suggestions=suggestions,
         all_items=all_items,
         time_slot=time_slot,
+        extras=EXTRAS,
         cart=cart,
         cart_count=len(cart)
     )
@@ -44,7 +65,7 @@ def add_to_cart(item_id):
         cart = session.get("cart", [])
         cart.append(item)
         session["cart"] = cart
-    return redirect(url_for("menu"))
+    return redirect(request.referrer or url_for("menu"))
 
 @app.route("/cart")
 def cart():
@@ -59,16 +80,19 @@ def place_order():
         return redirect(url_for("menu"))
 
     analytics = load_analytics()
+    today = get_today_key()
+    ensure_day(analytics, today)
     hour = str(datetime.now().hour)
     order_record = {
         "items": [i["name"] for i in cart],
         "total": sum(i["price"] for i in cart),
         "time": datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
-    analytics["orders"].append(order_record)
+    analytics["daily"][today]["orders"].append(order_record)
     for item in cart:
-        analytics["item_counts"][item["name"]] = analytics["item_counts"].get(item["name"], 0) + 1
-    analytics["hourly"][hour] = analytics["hourly"].get(hour, 0) + 1
+        name = item["name"]
+        analytics["daily"][today]["item_counts"][name] = analytics["daily"][today]["item_counts"].get(name, 0) + 1
+    analytics["daily"][today]["hourly"][hour] = analytics["daily"][today]["hourly"].get(hour, 0) + 1
     save_analytics(analytics)
 
     # Save to session history
@@ -88,15 +112,32 @@ def place_order():
 @app.route("/dashboard")
 def dashboard():
     analytics = load_analytics()
-    item_counts = sorted(analytics["item_counts"].items(), key=lambda x: x[1], reverse=True)
-    hourly = sorted(analytics["hourly"].items(), key=lambda x: int(x[0]))
-    total_orders = len(analytics["orders"])
-    total_revenue = sum(o["total"] for o in analytics["orders"])
+    today = get_today_key()
+    selected = request.args.get("date", today)
+    if selected not in analytics["daily"]:
+        selected = today
+    day = get_day_data(analytics, selected)
+    item_counts   = sorted(day["item_counts"].items(), key=lambda x: x[1], reverse=True)
+    hourly        = sorted(day["hourly"].items(), key=lambda x: int(x[0]))
+    total_orders  = len(day["orders"])
+    total_revenue = sum(o["total"] for o in day["orders"])
+    all_dates     = sorted(analytics["daily"].keys(), reverse=True)
+    # Build summary for all-days table
+    analytics_summary = {
+        d: {
+            "orders":  len(analytics["daily"][d]["orders"]),
+            "revenue": sum(o["total"] for o in analytics["daily"][d]["orders"])
+        } for d in all_dates
+    }
     return render_template("dashboard.html",
         item_counts=item_counts,
         hourly=hourly,
         total_orders=total_orders,
-        total_revenue=total_revenue
+        total_revenue=total_revenue,
+        selected=selected,
+        today=today,
+        all_dates=all_dates,
+        analytics_summary=analytics_summary
     )
 
 @app.route("/mood")

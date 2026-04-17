@@ -1,13 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div style="text-align:center;padding:40px 0;">
-  <h2>📱 Scan to Open Menu</h2>
-  <p style="color:#777;margin:8px 0 24px;">Share this QR code at your restaurant table</p>
-  <img src="data:image/png;base64,{{ qr_b64 }}" style="width:220px;height:220px;border:4px solid #e65c00;border-radius:12px;padding:8px;background:white;">
-  <p style="margin-top:16px;color:#999;font-size:0.85rem;">{{ url }}</p>
-  <div style="margin-top:20px;">
-    <a href="{{ url }}" class="btn">Open Menu Link</a>
+<div style="text-align:center;">
+  <div class="page-title" style="text-align:center;">📱 Table QR Code</div>
+  <div class="page-sub" style="text-align:center;">Place this at your restaurant table</div>
+
+  <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08);display:inline-block;margin:8px auto;">
+    <div style="background:linear-gradient(135deg,#e65c00,#f9a825);border-radius:16px;padding:16px;display:inline-block;margin-bottom:16px;">
+      <img src="data:image/png;base64,{{ qr_b64 }}"
+        style="width:200px;height:200px;display:block;border-radius:8px;background:white;padding:8px;">
+    </div>
+    <p style="font-weight:700;font-size:1rem;color:#333;margin-bottom:4px;">🍽️ QRavings Menu</p>
+    <p style="font-size:0.78rem;color:#999;margin-bottom:16px;">{{ url }}</p>
+    <a href="{{ url }}" class="btn" style="display:block;text-align:center;">🔗 Open Menu Link</a>
+  </div>
+
+  <div style="margin-top:24px;background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:14px;padding:16px 20px;max-width:400px;margin:24px auto 0;text-align:left;">
+    <p style="font-weight:700;font-size:0.9rem;margin-bottom:8px;">📋 How to use</p>
+    <p style="font-size:0.82rem;color:#777;line-height:1.7;">
+      1. Print this QR code<br>
+      2. Place on restaurant tables<br>
+      3. Customers scan → menu opens instantly<br>
+      4. Phone & PC must be on <strong>same WiFi</strong>
+    </p>
   </div>
 </div>
 

@@ -1,34 +1,51 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>🛒 Your Cart</h2>
+<div class="page-title">🛒 Your Cart</div>
+<div class="page-sub">Review your order before placing</div>
 
 {% if cart %}
-<table>
-  <thead>
-    <tr><th>Item</th><th>Category</th><th>Price</th></tr>
-  </thead>
-  <tbody>
-    {% for item in cart %}
-    <tr>
-      <td>{{ item.name }}</td>
-      <td>{{ item.category }}</td>
-      <td>₹{{ item.price }}</td>
-    </tr>
-    {% endfor %}
-    <tr>
-      <td colspan="2"><strong>Total</strong></td>
-      <td><strong>₹{{ total }}</strong></td>
-    </tr>
-  </tbody>
-</table>
+<div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:20px;">
+  {% for item in cart %}
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #fef3ec;">
+    <div>
+      <p style="font-weight:600;font-size:0.95rem;">{{ item.name }}</p>
+      <p style="font-size:0.78rem;color:#999;margin-top:2px;">{{ item.category }} &nbsp;|&nbsp; {{ item.calories }} kcal</p>
+    </div>
+    <p style="font-weight:700;color:#e65c00;font-size:1rem;">₹{{ item.price }}</p>
+  </div>
+  {% endfor %}
 
-<form method="POST" action="/place_order" style="margin-top:20px;">
-  <button type="submit" class="btn" style="padding:12px 32px;font-size:1rem;">✅ Place Order & Pay</button>
+  <!-- Total Row -->
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:#fff8f2;">
+    <p style="font-weight:700;font-size:1rem;">Total</p>
+    <p style="font-weight:700;color:#e65c00;font-size:1.2rem;">₹{{ total }}</p>
+  </div>
+</div>
+
+<!-- Offer reminder -->
+<div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+  <span style="font-size:1.8rem;">🎡</span>
+  <div>
+    <p style="font-weight:600;font-size:0.9rem;">Haven't spun the wheel yet?</p>
+    <p style="font-size:0.8rem;color:#777;">Win up to 20% OFF before placing your order!</p>
+  </div>
+  <a href="/spin" class="btn" style="margin-left:auto;white-space:nowrap;">Spin Now</a>
+</div>
+
+<form method="POST" action="/place_order">
+  <button type="submit" class="btn" style="width:100%;padding:14px;font-size:1rem;border-radius:12px;">
+    ✅ Place Order & Pay
+  </button>
 </form>
 
 {% else %}
-<p>Your cart is empty. <a href="/menu" style="color:#e65c00;">Browse Menu</a></p>
+<div style="text-align:center;padding:60px 20px;background:white;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
+  <div style="font-size:4rem;margin-bottom:16px;">🍽️</div>
+  <p style="font-size:1.1rem;font-weight:600;color:#555;margin-bottom:8px;">Your cart is empty!</p>
+  <p style="color:#999;margin-bottom:24px;">Add some delicious items from the menu</p>
+  <a href="/menu" class="btn">Browse Menu</a>
+</div>
 {% endif %}
 
 {% endblock %}
