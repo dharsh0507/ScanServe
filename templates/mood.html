@@ -200,12 +200,15 @@
     data.suggestions.forEach(item => {
       fc.innerHTML += `
         <div class="food-card">
-          <div>
-            <strong>${item.name}</strong>
-            <p>₹${item.price} &nbsp;|&nbsp; ${item.calories} kcal &nbsp;|&nbsp; ${item.category}</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#fff3e0,#ffe0b2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">${item.emoji || '🍽️'}</div>
+            <div>
+              <strong>${item.name}</strong>
+              <p>₹${item.price} &nbsp;|&nbsp; ${item.calories} kcal &nbsp;|&nbsp; ${item.category}</p>
+            </div>
           </div>
           <a href="/add_mood_item/${item.id}"
-            style="background:#e65c00;color:white;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:0.85rem;white-space:nowrap;">
+            style="background:#e65c00;color:white;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:0.85rem;white-space:nowrap;margin-left:8px;">
             + Add
           </a>
         </div>`;

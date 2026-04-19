@@ -7,6 +7,11 @@ __pycache__/
 # Downloaded images (run download_images.py to regenerate)
 static/images/
 
+# Loose root images
+*.jpg
+*.jpeg
+*.png
+
 # Environment
 .env
 venv/

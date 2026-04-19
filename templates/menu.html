@@ -14,12 +14,21 @@
 </div>
 <style>
   @keyframes spin { from{transform:translateY(-50%) rotate(0)} to{transform:translateY(-50%) rotate(360deg)} }
-  .img-thumb {
-    width:64px; height:64px; border-radius:12px; object-fit:cover;
-    flex-shrink:0; background:#fef3ec;
-    transition: transform 0.2s;
+
+  /* Image tile - shows photo if exists, emoji fallback if not */
+  .food-img {
+    width:64px; height:64px; border-radius:12px; flex-shrink:0;
+    object-fit:cover; background:linear-gradient(135deg,#fff3e0,#ffe0b2);
+    transition:transform 0.2s;
   }
-  .food-card:hover .img-thumb { transform: scale(1.08); }
+  .food-card:hover .food-img { transform:scale(1.08); }
+  .food-img-wrap {
+    width:64px; height:64px; border-radius:12px; flex-shrink:0;
+    background:linear-gradient(135deg,#fff3e0,#ffe0b2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem; overflow:hidden; transition:transform 0.2s;
+  }
+  .food-card:hover .food-img-wrap { transform:scale(1.08); }
   .grid-card {
     background:white; border-radius:16px; overflow:hidden;
     box-shadow:0 2px 12px rgba(0,0,0,0.07);
@@ -27,7 +36,12 @@
     animation: slideIn 0.4s ease both;
   }
   .grid-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(230,92,0,0.18); }
-  .grid-card img { width:100%; height:130px; object-fit:cover; }
+  .grid-top { width:100%; height:120px; object-fit:cover; display:block; }
+  .grid-top-fb {
+    width:100%; height:120px; display:flex; align-items:center;
+    justify-content:center; font-size:3.5rem;
+    background:linear-gradient(135deg,#fff3e0,#ffe0b2);
+  }
   .grid-card .gc-body { padding:12px; }
   .grid-card .gc-body p { font-weight:700; font-size:0.85rem; margin-bottom:4px; }
   .grid-card .gc-body span { font-size:0.75rem; color:#aaa; }
@@ -51,9 +65,10 @@
   {% for item in suggestions %}
   <div class="food-card suggested" style="animation-delay:{{ loop.index0 * 0.08 }}s;">
     <div style="display:flex;align-items:center;gap:12px;flex:1;">
-      <img src="{{ item.img }}" alt="{{ item.name }}" class="img-thumb"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <span style="display:none;width:64px;height:64px;border-radius:12px;background:#fff3e0;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">{{ item.emoji }}</span>
+      <div class="food-img-wrap">
+        <img src="{{ item.img }}" alt="{{ item.name }}" class="food-img"
+          onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2rem>{{ item.emoji }}</span>';">
+      </div>
       <div>
         <h3>{{ item.name }}
           {% if item.popular %}<span class="badge">🔥 Popular</span>{% endif %}
@@ -77,9 +92,10 @@
   {% for item in all_items %}
   <div class="food-card" style="animation-delay:{{ loop.index0 * 0.06 }}s;">
     <div style="display:flex;align-items:center;gap:12px;flex:1;">
-      <img src="{{ item.img }}" alt="{{ item.name }}" class="img-thumb"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <span style="display:none;width:64px;height:64px;border-radius:12px;background:#fff3e0;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">{{ item.emoji }}</span>
+      <div class="food-img-wrap">
+        <img src="{{ item.img }}" alt="{{ item.name }}" class="food-img"
+          onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2rem>{{ item.emoji }}</span>';">
+      </div>
       <div>
         <h3>{{ item.name }} {% if item.popular %}<span class="badge">🔥 Popular</span>{% endif %}</h3>
         <div class="meta">
@@ -100,9 +116,9 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
     {% for item in extras.snacks %}
     <div class="grid-card" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
-      <img src="{{ item.img }}" alt="{{ item.name }}"
-        onerror="this.src='';this.style.display='none';this.parentElement.querySelector('.emoji-fb').style.display='flex'">
-      <div class="emoji-fb" style="display:none;height:130px;align-items:center;justify-content:center;font-size:3rem;background:#fff8f2;">{{ item.emoji }}</div>
+      <img src="{{ item.img }}" alt="{{ item.name }}" class="grid-top"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="grid-top-fb" style="display:none;">{{ item.emoji }}</div>
       <div class="gc-body">
         <p>{{ item.name }} {% if item.popular %}<span class="badge" style="font-size:0.6rem;">🔥</span>{% endif %}</p>
         <span>{{ item.calories }} kcal</span><br>
@@ -122,9 +138,9 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
     {% for item in extras.desserts %}
     <div class="grid-card" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
-      <img src="{{ item.img }}" alt="{{ item.name }}"
-        onerror="this.style.display='none';this.parentElement.querySelector('.emoji-fb').style.display='flex'">
-      <div class="emoji-fb" style="display:none;height:130px;align-items:center;justify-content:center;font-size:3rem;background:#fff8f2;">{{ item.emoji }}</div>
+      <img src="{{ item.img }}" alt="{{ item.name }}" class="grid-top"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="grid-top-fb" style="display:none;">{{ item.emoji }}</div>
       <div class="gc-body">
         <p>{{ item.name }}</p>
         <span>{{ item.calories }} kcal</span><br>
@@ -144,9 +160,9 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
     {% for item in extras.ice_cream %}
     <div class="grid-card" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
-      <img src="{{ item.img }}" alt="{{ item.name }}"
-        onerror="this.style.display='none';this.parentElement.querySelector('.emoji-fb').style.display='flex'">
-      <div class="emoji-fb" style="display:none;height:130px;align-items:center;justify-content:center;font-size:3rem;background:#fff8f2;">{{ item.emoji }}</div>
+      <img src="{{ item.img }}" alt="{{ item.name }}" class="grid-top"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="grid-top-fb" style="display:none;">{{ item.emoji }}</div>
       <div class="gc-body">
         <p>{{ item.name }}</p>
         <span>{{ item.calories }} kcal</span><br>
@@ -166,9 +182,9 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
     {% for item in extras.milkshakes %}
     <div class="grid-card" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
-      <img src="{{ item.img }}" alt="{{ item.name }}"
-        onerror="this.style.display='none';this.parentElement.querySelector('.emoji-fb').style.display='flex'">
-      <div class="emoji-fb" style="display:none;height:130px;align-items:center;justify-content:center;font-size:3rem;background:#fff8f2;">{{ item.emoji }}</div>
+      <img src="{{ item.img }}" alt="{{ item.name }}" class="grid-top"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="grid-top-fb" style="display:none;">{{ item.emoji }}</div>
       <div class="gc-body">
         <p>{{ item.name }}</p>
         <span>{{ item.calories }} kcal</span><br>
@@ -188,9 +204,10 @@
   {% for item in extras.beverages %}
   <div class="food-card" style="animation-delay:{{ loop.index0 * 0.06 }}s;">
     <div style="display:flex;align-items:center;gap:12px;flex:1;">
-      <img src="{{ item.img }}" alt="{{ item.name }}" class="img-thumb"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <span style="display:none;width:64px;height:64px;border-radius:12px;background:#fff3e0;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">{{ item.emoji }}</span>
+      <div class="food-img-wrap">
+        <img src="{{ item.img }}" alt="{{ item.name }}" class="food-img"
+          onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2rem>{{ item.emoji }}</span>';">
+      </div>
       <div>
         <h3>{{ item.name }} {% if item.popular %}<span class="badge">🔥 Popular</span>{% endif %}</h3>
         <div class="meta"><span>💰 ₹{{ item.price }}</span><span>🔥 {{ item.calories }} kcal</span></div>
